@@ -28,7 +28,7 @@ class Deck:
 
 	def DistributeDeck(self):
 		hand = []
-		for x in range(0,18):
+		for x in range(0,9):
 			hand.append(self.deck.pop())
 		return hand
 
@@ -86,7 +86,6 @@ class Kitty:
 		# sorted(key_value.items(), key = lambda kv:(kv[1], kv[0]))
 		self.combinationsAndProbs = sorted(self.combinationsAndProbs.items(), key=lambda kv:(kv[1], kv[0]))
 		self.arrangementsAndProbs = sorted(self.arrangementsAndProbs.items(), key=lambda kv:(kv[1], kv[0]))
-		print(self.arrangementsAndProbs)
 
 		finalArrangement = []
 		allProbs = [self.combinationsAndProbs[i][1] for i in range(0, len(self.combinationsAndProbs))]		
