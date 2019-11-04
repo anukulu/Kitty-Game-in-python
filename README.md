@@ -3,6 +3,7 @@ Kitty is a card game that is played widely in Nepal
 
 
 This program (kitty.py) shows the best possible arrangement of 9 cards grouped into three according to the rules of Kitty game.
+You can run the kitty.py python file to see the best arrangement of 9 cards according to the rules of Kitty.
 
 Anyone interested to build the complete game with bots(Computer AI) as alternate players can use this program to assign the best 
 possible combination of cards to the bots(Computer AI).
