@@ -28,13 +28,13 @@ class Deck:
 
 	def DistributeDeck(self):
 		hand = []
-		for x in range(0,9):
+		for x in range(0,18):
 			hand.append(self.deck.pop())
 		return hand
 
 
 class Kitty:
-	def __init__(self, noOfPlayers):
+	def __init__(self, noOfPlayers):			# assignment of probabilities to the each possible combination of cards
 		self.noOfPlayers = noOfPlayers
 		self.handProbabilities = {'Trio': 0.0022,
 								  'PureSequence': 0.0024,
@@ -44,12 +44,12 @@ class Kitty:
 								  'HighCard': 0.7439}
 		self.combinationsAndProbs = {}
 		self.arrangementsAndProbs = {}
-	def SortCards(self, oneArrangement):
+	def SortCards(self, oneArrangement):		# sorting three cards in ascending order of their name
 		# customObjects.sort(key=lambda x: x.date, reverse=True)
 		oneArrangement.sort(key=lambda x: x.name, reverse=False)
 		return oneArrangement
 
-	def BestArrangement(self, cards):
+	def BestArrangement(self, cards):	# this function prints the best arrangement of the given cards grouped into three
 		for givenCard in cards:
 			print(str(givenCard.name) + givenCard.color, end=' ')
 		print('\n')
@@ -83,7 +83,6 @@ class Kitty:
 			givenName = str(hand[0].name)+hand[0].color+str(hand[1].name)+hand[1].color+str(hand[2].name)+hand[2].color
 			self.arrangementsAndProbs[givenName] = self.handProbabilities[handType]
 			i = i + 1
-			# print((str(hand[0].name) + hand[0].color) + ' ' + (str(hand[1].name) + hand[1].color) + ' ' + (str(hand[2].name) + hand[2].color))
 		# sorted(key_value.items(), key = lambda kv:(kv[1], kv[0]))
 		self.combinationsAndProbs = sorted(self.combinationsAndProbs.items(), key=lambda kv:(kv[1], kv[0]))
 		self.arrangementsAndProbs = sorted(self.arrangementsAndProbs.items(), key=lambda kv:(kv[1], kv[0]))
@@ -106,23 +105,23 @@ class Kitty:
 			if(conditionA):
 				sumCurrent = currentCombo[0].name + currentCombo[1].name + currentCombo[2].name
 				sumNext = nextCombo[0].name + nextCombo[1].name + nextCombo[2].name
-				if (sumCurrent == sumNext):
+				if (sumCurrent >= sumNext):
 					continue
 				else:
 					finalArrangement = finalArrangement[:len(finalArrangement)-3]
 					for cardFinal in nextCombo:
 						finalArrangement.append(cardFinal)
-					# lst = lst[:len(lst)-n]
+					previousProb = currentProb
 			elif (conditionB):
 				for cardFinal in nextCombo:
-						finalArrangement.append(cardFinal)
+					finalArrangement.append(cardFinal)
+				previousProb = currentProb
 			elif (conditionC):
 				for cardFinal in nextCombo:
-						finalArrangement.append(cardFinal)
-			previousProb = currentProb
+					finalArrangement.append(cardFinal)
+				previousProb = currentProb
 		for finalCard in finalArrangement:
 			print(str(finalCard.name) + ' ' + finalCard.color)
-
 
 newDeck = Deck()
 newDeck.MakeDeck()
