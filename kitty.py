@@ -1,6 +1,7 @@
 import random
 import itertools
 from collections import OrderedDict
+import numpy as np
 
 class Card:
 	def __init__(self, name, color):
@@ -33,36 +34,28 @@ class Deck:
 		return hand
 
 
-class Kitty:
-	def __init__(self, noOfPlayers):			# assignment of probabilities to the each possible combination of cards
-		self.noOfPlayers = noOfPlayers
+class Arrangement:
+	def __init__(self):			# assignment of probabilities to the each possible combination of cards
 		self.handProbabilities = {'Trio': 0.0022,
 								  'PureSequence': 0.0024,
 								  'Sequence': 0.0326,
 								  'Color': 0.0496,
 								  'Pair': 0.1694,
 								  'HighCard': 0.7439}
-		self.combinationsAndProbs = {}
-		self.arrangementsAndProbs = {}
-	def SortCards(self, oneArrangement):		# sorting three cards in ascending order of their name
+	def SortCards(self, allArrangements):		# sorting three cards in ascending order of their name
 		# customObjects.sort(key=lambda x: x.date, reverse=True)
-		oneArrangement.sort(key=lambda x: x.name, reverse=False)
-		return oneArrangement
+		sortedPossibleCombinations = []
+		for oneArrangement in allArrangements:
+			arrangementToAdd = list(oneArrangement)
+			arrangementToAdd.sort(key=lambda x: x.name, reverse=False)
+			sortedPossibleCombinations.append(arrangementToAdd)
+		return sortedPossibleCombinations
 
-	def BestArrangement(self, cards):	# this function prints the best arrangement of the given cards grouped into three
-		for givenCard in cards:
-			print(str(givenCard.name) + givenCard.color, end=' ')
-		print('\n')
-		allPossibleCombinations = list(itertools.combinations(cards, 3))
-		sortedPosiibleCombinations = []
-		
-		for singleCombination in allPossibleCombinations:
-			sortedCombination = self.SortCards(list(singleCombination))
-			sortedPosiibleCombinations.append(sortedCombination)
-
+	def ClassifyCards(self, sortedCombinations):
+		combinationsAndProbs = {}
 		handType = ''
 		i = 0
-		for hand in sortedPosiibleCombinations:
+		for hand in sortedCombinations:
 			condition1 = (hand[0].name == hand[1].name) and (hand[1].name == hand[2].name) # This one is for Trio
 			condition2 = (hand[0].color == hand[1].color) and (hand[1].color == hand[2].color) # This one is for Color
 			condition3 = (((hand[1].name - hand[0].name) == 1) and ((hand[2].name - hand[1].name) == 1)) # This one is for Sequence
@@ -79,18 +72,28 @@ class Kitty:
 				handType = 'Pair'
 			else:
 				handType = 'HighCard'
-			self.combinationsAndProbs[i] = self.handProbabilities[handType]
-			givenName = str(hand[0].name)+hand[0].color+str(hand[1].name)+hand[1].color+str(hand[2].name)+hand[2].color
-			self.arrangementsAndProbs[givenName] = self.handProbabilities[handType]
+			combinationsAndProbs[i] = self.handProbabilities[handType]
+			
 			i = i + 1
 		# sorted(key_value.items(), key = lambda kv:(kv[1], kv[0]))
-		self.combinationsAndProbs = sorted(self.combinationsAndProbs.items(), key=lambda kv:(kv[1], kv[0]))
-		self.arrangementsAndProbs = sorted(self.arrangementsAndProbs.items(), key=lambda kv:(kv[1], kv[0]))
+		combinationsAndProbs = sorted(combinationsAndProbs.items(), key=lambda kv:(kv[1], kv[0]))
+		return combinationsAndProbs
+
+
+	def BestArrangement(self, cards):	# this function prints the best arrangement of the given cards grouped into three
+		for givenCard in cards:
+			print(str(givenCard.name) + givenCard.color, end=' ')
+		print('\n')
+
+		allPossibleCombinations = list(itertools.combinations(cards, 3))	# all the possible combinations are tuples
+		sortedPosiibleCombinations = self.SortCards(allPossibleCombinations)
+		combinationsAndProbs = self.ClassifyCards(sortedPosiibleCombinations)
+
 
 		finalArrangement = []
-		allProbs = [self.combinationsAndProbs[i][1] for i in range(0, len(self.combinationsAndProbs))]		
+		allProbs = [combinationsAndProbs[i][1] for i in range(0, len(combinationsAndProbs))]		
 		previousProb = allProbs[0]
-		keys = [self.combinationsAndProbs[i][0] for i in range(0, len(self.combinationsAndProbs))]
+		keys = [combinationsAndProbs[i][0] for i in range(0, len(combinationsAndProbs))]
 		for reqdCards in sortedPosiibleCombinations[keys[0]]:
 			finalArrangement.append(reqdCards)
 		for k in range(0,len(keys)):
@@ -119,15 +122,77 @@ class Kitty:
 				for cardFinal in nextCombo:
 					finalArrangement.append(cardFinal)
 				previousProb = currentProb
+		for eachCard in cards:
+			if eachCard not in finalArrangement:
+				finalArrangement.append(eachCard)
+
 		for finalCard in finalArrangement:
 			print(str(finalCard.name) + ' ' + finalCard.color)
 
-newDeck = Deck()
-newDeck.MakeDeck()
-newDeck.ShuffleDeck()
+		return finalArrangement
 
-newGame = Kitty(4)
-newGame.BestArrangement(newDeck.DistributeDeck())
+class Player:
+	def __init__(self, hand):
+		self.hand = hand
+		arrange = Arrangement()
+		self.arrangedHand = arrange.BestArrangement(self.hand)
 
 
+n = int(input('How many players are playing ? The number should be less than 6 and greater than 1.'))
+if ((n > 1) and (n < 6)) :		# This module plays games of Kitty with the number of players specified and decides the winner
+	newDeck = Deck()
+	newDeck.MakeDeck()
+	newDeck.ShuffleDeck()		
+	players = []
+	arranger = Arrangement()
+	for x in range(n):
+		newPlayer = Player(newDeck.DistributeDeck())
+		players.append(newPlayer)
 
+	pointsTable = np.zeros((3,n), dtype=int)
+
+	for roundNumber in range(3):
+		eachRound = []
+		for k in range(n):
+			individualHand = players[k].arrangedHand[3*roundNumber : 3*(roundNumber+1)]
+			eachRound.append(individualHand)
+		combinationsSorted = arranger.SortCards(eachRound)	# this variable and eachround have same index
+		indexInSortedComb = arranger.ClassifyCards(combinationsSorted)
+
+		maxhand = [combinationsSorted[indexInSortedComb[0][0]]]
+		maxIndex = [indexInSortedComb[0][0]]
+
+		for indexAndProb in range(1, len(indexInSortedComb)):
+			
+			if(indexInSortedComb[0][1] == indexInSortedComb[indexAndProb][1]):
+				currentHand = combinationsSorted[indexInSortedComb[indexAndProb][0]]
+				sum1 = (maxhand[0][0].name + maxhand[0][1].name + maxhand[0][2].name)
+				sum2 = (currentHand[0].name + currentHand[1].name + currentHand[2].name)
+				if(sum2 > sum1):
+					maxhand = [currentHand]
+					maxIndex = [indexInSortedComb[indexAndProb][0]]
+				if(sum1 == sum2):
+					maxhand.append(currentHand)
+					maxIndex.append(indexInSortedComb[indexAndProb][0])
+
+		if(len(maxhand) == 1):
+			pointsTable[roundNumber][maxIndex[0]] += 1
+	print(pointsTable)
+
+	tempPoints = np.zeros((1,n), dtype=int)
+	for rounds in pointsTable:
+		i = 0
+		for point in rounds:
+			if(point == 1):
+				tempPoints[0][i] += 1
+			else:
+				tempPoints[0][i] = 0
+			i = i + 1
+		if (2 in tempPoints[0]):
+			winnerIndex = np.where(tempPoints[0] == 2)
+			print("The winner is the number : " + str(winnerIndex[0][0] + 1) + " player.")
+		elif(3 in tempPoints[0]):
+			winnerIndex = np.where(tempPoints[0] == 3)
+			print("The winner also gets Salami.")
+else:
+	print('The game is not possible.')
